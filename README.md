@@ -10,8 +10,8 @@ More information about this project can be found in our [paper](https://arxiv.or
 The code was developed under VS2013, and tested with a Structure Sensor.
 
 Requirements:
-- DirectX SDK June 2010
-- NVIDIA CUDA 7.0
+- [DirectX SDK June 2010](https://www.microsoft.com/en-us/download/details.aspx?id=6812)
+- [NVIDIA CUDA 7.0](https://developer.nvidia.com/cuda-toolkit-70) (7.5 and 8.0 have been reported to work with minimal changes)
 - our research library mLib, a git submodule in external/mLib
 - mLib external libraries can be downloaded [here](https://www.dropbox.com/s/fve3uen5mzonidx/mLibExternal.zip?dl=0)
 
