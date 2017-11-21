@@ -7,7 +7,7 @@
 
 extern "C" void evalMaxResidual(SolverInput& input, SolverState& state, SolverStateAnalysis& analysis, SolverParameters& parameters, CUDATimer* timer);
 extern "C" void buildVariablesToCorrespondencesTableCUDA(EntryJ* d_correspondences, unsigned int numberOfCorrespondences, unsigned int maxNumCorrespondencesPerImage, int* d_variablesToCorrespondences, int* d_numEntriesPerRow, CUDATimer* timer);
-extern "C" void solveBundlingStub(SolverInput& input, SolverState& state, SolverParameters& parameters, SolverStateAnalysis& analysis, float* convergenceAnalysis, CUDATimer* timer);
+extern "C" void solveBundlingStub(SolverInput& input, SolverState& state, SolverParameters& parameters, SolverStateAnalysis& analysis, float* convergenceAnalysis, CUDATimer* timer, bool dumpInputOutput);
 
 extern "C" int countHighResiduals(SolverInput& input, SolverState& state, SolverParameters& parameters, CUDATimer* timer);
 
@@ -270,7 +270,8 @@ void CUDASolverBundling::solve(EntryJ* d_correspondences, unsigned int numberOfC
 	//	cudaCache->printCacheImages("debug/cache/");
 	//	int a = 5;
 	//}
-	solveBundlingStub(solverInput, m_solverState, parameters, m_solverExtra, convergence, m_timer);
+    bool dumpInputOutput = false;
+	solveBundlingStub(solverInput, m_solverState, parameters, m_solverExtra, convergence, m_timer, dumpInputOutput);
 
 	if (findMaxResidual) {
 		computeMaxResidual(solverInput, parameters, revalidateIdx);
