@@ -260,8 +260,7 @@ int main(int argc, char** argv)
 		g_RGBDSensor->createFirstConnected();
 
 
-		g_imageManager = new CUDAImageManager(GlobalAppState::get().s_integrationWidth, GlobalAppState::get().s_integrationHeight,
-			GlobalBundlingState::get().s_widthSIFT, GlobalBundlingState::get().s_heightSIFT, g_RGBDSensor, false);
+		g_imageManager = new CUDAImageManager(GlobalAppState::get().s_integrationWidth, GlobalAppState::get().s_integrationHeight, g_RGBDSensor, false);
 #ifdef RUN_MULTITHREADED
 		std::thread bundlingThread(bundlingThreadFunc);
 		//waiting until bundler is initialized

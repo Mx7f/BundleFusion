@@ -137,7 +137,7 @@ public:
 		static ManagedRGBDInputFrame*	s_activeDepthCPU;
 	};
 
-	CUDAImageManager(unsigned int widthIntegration, unsigned int heightIntegration, unsigned int widthSIFT, unsigned int heightSIFT, RGBDSensor* sensor, bool storeFramesOnGPU = false) {
+	CUDAImageManager(unsigned int widthIntegration, unsigned int heightIntegration, RGBDSensor* sensor, bool storeFramesOnGPU = false) {
 		m_RGBDSensor = sensor;
 
 		m_widthSIFTdepth = sensor->getDepthWidth();
