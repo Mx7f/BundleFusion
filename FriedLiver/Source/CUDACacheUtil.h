@@ -2,38 +2,44 @@
 #ifndef CUDA_CACHE_UTIL
 #define CUDA_CACHE_UTIL
 
-#include "mLibCuda.h"
+#include <cutil_inline.h>
+#include <cutil_math.h>
+
+#define CUDA_SAFE_FREE(b) { if(!b) { cutilSafeCall(cudaFree(b)); b = NULL; } }
+
+
+#define MINF __int_as_float(0xff800000)
 
 #define CUDACACHE_UCHAR_NORMALS
 #define CUDACACHE_FLOAT_NORMALS
 
 struct CUDACachedFrame {
 	void alloc(unsigned int width, unsigned int height) {
-		MLIB_CUDA_SAFE_CALL(cudaMalloc(&d_depthDownsampled, sizeof(float) * width * height));
+        cutilSafeCall(cudaMalloc(&d_depthDownsampled, sizeof(float) * width * height));
 		//MLIB_CUDA_SAFE_CALL(cudaMalloc(&d_colorDownsampled, sizeof(uchar4) * width * height));
-		MLIB_CUDA_SAFE_CALL(cudaMalloc(&d_cameraposDownsampled, sizeof(float4) * width * height));
+        cutilSafeCall(cudaMalloc(&d_cameraposDownsampled, sizeof(float4) * width * height));
 
-		MLIB_CUDA_SAFE_CALL(cudaMalloc(&d_intensityDownsampled, sizeof(float) * width * height));
-		MLIB_CUDA_SAFE_CALL(cudaMalloc(&d_intensityDerivsDownsampled, sizeof(float2) * width * height));
+        cutilSafeCall(cudaMalloc(&d_intensityDownsampled, sizeof(float) * width * height));
+        cutilSafeCall(cudaMalloc(&d_intensityDerivsDownsampled, sizeof(float2) * width * height));
 #ifdef CUDACACHE_UCHAR_NORMALS
-		MLIB_CUDA_SAFE_CALL(cudaMalloc(&d_normalsDownsampledUCHAR4, sizeof(uchar4) * width * height));
+        cutilSafeCall(cudaMalloc(&d_normalsDownsampledUCHAR4, sizeof(uchar4) * width * height));
 #endif
 #ifdef CUDACACHE_FLOAT_NORMALS
-		MLIB_CUDA_SAFE_CALL(cudaMalloc(&d_normalsDownsampled, sizeof(float4) * width * height));
+        cutilSafeCall(cudaMalloc(&d_normalsDownsampled, sizeof(float4) * width * height));
 #endif
 	}
 	void free() {
-		MLIB_CUDA_SAFE_FREE(d_depthDownsampled);
+        CUDA_SAFE_FREE(d_depthDownsampled);
 		//MLIB_CUDA_SAFE_FREE(d_colorDownsampled);
-		MLIB_CUDA_SAFE_FREE(d_cameraposDownsampled);
+        CUDA_SAFE_FREE(d_cameraposDownsampled);
 
-		MLIB_CUDA_SAFE_FREE(d_intensityDownsampled);
-		MLIB_CUDA_SAFE_FREE(d_intensityDerivsDownsampled);
+        CUDA_SAFE_FREE(d_intensityDownsampled);
+        CUDA_SAFE_FREE(d_intensityDerivsDownsampled);
 #ifdef CUDACACHE_UCHAR_NORMALS
-		MLIB_CUDA_SAFE_FREE(d_normalsDownsampledUCHAR4);
+        CUDA_SAFE_FREE(d_normalsDownsampledUCHAR4);
 #endif
 #ifdef CUDACACHE_FLOAT_NORMALS
-		MLIB_CUDA_SAFE_FREE(d_normalsDownsampled); 
+        CUDA_SAFE_FREE(d_normalsDownsampled);
 #endif
 	}
 

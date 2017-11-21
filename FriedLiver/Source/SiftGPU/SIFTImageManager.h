@@ -17,7 +17,9 @@
 #include "GlobalDefines.h"
 #include "cuda_SimpleMatrixUtil.h"
 #include "../CUDACacheUtil.h"
+#include "../mLibCuda.h"
 #include "CUDATimer.h"
+#include "../EntryJ.h"
 
 struct SIFTKeyPoint {
 	float2 pos;
@@ -40,26 +42,6 @@ struct ImagePairMatch {
 	float*		d_distances;		//array of distance (one per match)
 	uint2*		d_keyPointIndices;	//array of index pair (one per match)	
 };
-
-//correspondence_idx -> image_Idx_i,j
-struct EntryJ {
-	unsigned int imgIdx_i;
-	unsigned int imgIdx_j;
-	float3 pos_i;
-	float3 pos_j;
-
-	__host__ __device__
-	void setInvalid() {
-		imgIdx_i = (unsigned int)-1;
-		imgIdx_j = (unsigned int)-1;
-	}
-	__host__ __device__
-	bool isValid() const {
-		return imgIdx_i != (unsigned int)-1;
-	}
-};
-
-
 
 class SIFTImageManager {
 public:

@@ -52,7 +52,7 @@
 #include "TimingLog.h"
 
 #include "SiftGPU/MatrixConversion.h"
-#include "SiftGPU/CUDATimer.h"
+#include "CUDATimer.h"
 #include "SiftGPU/SIFTMatchFilter.h"
 #include "CUDAImageManager.h"
 

@@ -13,7 +13,7 @@
 #include "SolverBundlingEquations.h"
 #include "SolverBundlingEquationsLie.h"
 #include "SolverBundlingDenseUtil.h"
-#include "../../SiftGPU/CUDATimer.h"
+#include "../CUDATimer.h"
 
 #include <conio.h>
 

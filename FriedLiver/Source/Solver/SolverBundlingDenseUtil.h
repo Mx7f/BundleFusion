@@ -6,7 +6,7 @@
 #include "GlobalDefines.h"
 #include <cutil_inline.h>
 #include <cutil_math.h>
-#include "../SiftGPU/cuda_SimpleMatrixUtil.h"
+#include "../cuda_SimpleMatrixUtil.h"
 #include "ICPUtil.h" //for the bilinear...
 #include "../CUDACameraUtil.h"
 

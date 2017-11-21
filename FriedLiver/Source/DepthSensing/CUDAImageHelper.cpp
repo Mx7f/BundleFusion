@@ -2,8 +2,6 @@
 
 #include "CUDAImageHelper.h"
 
-#include "GlobalAppState.h"
-
 #include <vector>
 #include <iostream>
 

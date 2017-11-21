@@ -4,9 +4,11 @@
 #define _SOLVER_STATE_
 
 #include <cuda_runtime.h> 
-#include "../SiftGPU/SIFTImageManager.h"
+#include <vector>
+#include "../EntryJ.h"
 #include "../CUDACacheUtil.h"
 #include "SolverBundlingParameters.h"
+#include "../cuda_SimpleMatrixUtil.h"
 
 struct SolverInput
 {	
@@ -118,7 +120,7 @@ template <typename T>
 void writeCudaArray(std::ofstream& s, const T* d_v, const uint count) {
     std::vector<T> vec;
     vec.resize(count);
-    MLIB_CUDA_SAFE_CALL(cudaMemcpy(vec.data(), d_v, sizeof(T)*count, cudaMemcpyDeviceToHost));
+    cutilSafeCall(cudaMemcpy(vec.data(), d_v, sizeof(T)*count, cudaMemcpyDeviceToHost));
     writeArray<T>(s, vec.data(), count);
 }
 
@@ -139,7 +141,7 @@ void readCudaArray(std::ifstream& s, T* d_v, uint* count) {
     s.read((char*)count, sizeof(uint));
     vec.resize(*count);
     s.read((char*)vec.data(), sizeof(T)*(*count));
-    MLIB_CUDA_SAFE_CALL(cudaMemcpy(d_v, vec.data(), sizeof(T)*(*count), cudaMemcpyHostToDevice));
+    cutilSafeCall(cudaMemcpy(d_v, vec.data(), sizeof(T)*(*count), cudaMemcpyHostToDevice));
 }
 
 struct SolverInputPOD {
@@ -196,7 +198,7 @@ static void saveAllStateToFile(std::string filename, const SolverInput& input, c
         std::vector<CUDACachedFrame> cacheFrames;
         cacheFrames.resize(inputPOD.numIm);
         printf("%p\n", input.d_cacheFrames);
-        MLIB_CUDA_SAFE_CALL(cudaMemcpy(cacheFrames.data(), input.d_cacheFrames, sizeof(CUDACachedFrame)*inputPOD.numIm, cudaMemcpyDeviceToHost));
+        cutilSafeCall(cudaMemcpy(cacheFrames.data(), input.d_cacheFrames, sizeof(CUDACachedFrame)*inputPOD.numIm, cudaMemcpyDeviceToHost));
         for (auto f : cacheFrames) {
             writeCudaArray<float>(out, f.d_depthDownsampled, inputPOD.numIm);
             writeCudaArray<float4>(out, f.d_cameraposDownsampled, inputPOD.numIm);
@@ -236,7 +238,7 @@ static void loadAllStateFromFile(std::string filename, SolverInput& input, Solve
     if (hasCache) {
         std::vector<CUDACachedFrame> cacheFrames;
         cacheFrames.resize(inputPOD.numIm);
-        MLIB_CUDA_SAFE_CALL(cudaMemcpy(cacheFrames.data(), input.d_cacheFrames, sizeof(CUDACachedFrame)*inputPOD.numIm, cudaMemcpyDeviceToHost));
+        cutilSafeCall(cudaMemcpy(cacheFrames.data(), input.d_cacheFrames, sizeof(CUDACachedFrame)*inputPOD.numIm, cudaMemcpyDeviceToHost));
         for (auto f : cacheFrames) {
             readCudaArray<float>(inp, f.d_depthDownsampled, &inputPOD.numIm);
             readCudaArray<float4>(inp, f.d_cameraposDownsampled, &inputPOD.numIm);

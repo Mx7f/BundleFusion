@@ -9,7 +9,7 @@
 #include <device_functions.h>
 #include <math_constants.h>
 
-#include "../../SiftGPU/cuda_SimpleMatrixUtil.h"
+#include "../cuda_SimpleMatrixUtil.h"
 
 #define ONE_TWENTIETH 0.05f
 #define ONE_SIXTH 0.16666667f
