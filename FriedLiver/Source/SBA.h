@@ -22,8 +22,8 @@ public:
 	SBA();
 	void init(unsigned int maxImages, unsigned int maxNumResiduals) {
 		unsigned int maxNumImages = maxImages;
-		MLIB_CUDA_SAFE_CALL(cudaMalloc(&d_xRot, sizeof(EntryJ)*maxNumImages));
-		MLIB_CUDA_SAFE_CALL(cudaMalloc(&d_xTrans, sizeof(EntryJ)*maxNumImages));
+		MLIB_CUDA_SAFE_CALL(cudaMalloc(&d_xRot, sizeof(float3)*maxNumImages));
+        MLIB_CUDA_SAFE_CALL(cudaMalloc(&d_xTrans, sizeof(float3)*maxNumImages));
 
 		m_solver = new CUDASolverBundling(maxImages, maxNumResiduals);
 		m_bVerify = false;
