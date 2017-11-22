@@ -12,7 +12,7 @@
 #include <cutil_inline.h>
 #include <cutil_math.h>
 
-#include "../cuda_SimpleMatrixUtil.h"
+#include "cuda_SimpleMatrixUtil.h"
 
 #include "SolverBundlingUtil.h"
 #include "SolverBundlingState.h"
