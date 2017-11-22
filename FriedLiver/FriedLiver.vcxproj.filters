@@ -399,6 +399,7 @@
     <ClInclude Include="Source\KinectOneSensor.h">
       <Filter>Sensors</Filter>
     </ClInclude>
+    <ClInclude Include="Source\EntryJ.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="DXUT">

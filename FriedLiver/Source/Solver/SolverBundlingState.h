@@ -5,10 +5,10 @@
 
 #include <cuda_runtime.h> 
 #include <vector>
-#include "../EntryJ.h"
-#include "../CUDACacheUtil.h"
+#include "EntryJ.h"
+#include "CUDACacheUtil.h"
 #include "SolverBundlingParameters.h"
-#include "../cuda_SimpleMatrixUtil.h"
+#include "cuda_SimpleMatrixUtil.h"
 
 struct SolverInput
 {	

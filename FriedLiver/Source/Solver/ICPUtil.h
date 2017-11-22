@@ -7,7 +7,7 @@
 #include <cutil_math.h>
 #include <device_functions.h>
 
-#include "../cuda_SimpleMatrixUtil.h"
+#include "cuda_SimpleMatrixUtil.h"
 
 
 // color stuff

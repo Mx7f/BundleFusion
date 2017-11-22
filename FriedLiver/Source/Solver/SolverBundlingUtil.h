@@ -3,7 +3,7 @@
 #ifndef _SOLVER_Stereo_UTIL_
 #define _SOLVER_Stereo_UTIL_
 
-#include "../SolverUtil.h"
+#include "SolverUtil.h"
 
 #include <cutil_inline.h>
 #include <cutil_math.h>

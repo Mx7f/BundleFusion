@@ -183,6 +183,7 @@
     <ClInclude Include="Source\DXUT\Optional\DXUTsettingsdlg.h" />
     <ClInclude Include="Source\DXUT\Optional\SDKmesh.h" />
     <ClInclude Include="Source\DXUT\Optional\SDKmisc.h" />
+    <ClInclude Include="Source\EntryJ.h" />
     <ClInclude Include="Source\FriedLiver.h" />
     <ClInclude Include="Source\GlobalAppState.h" />
     <ClInclude Include="Source\GlobalBundlingState.h" />

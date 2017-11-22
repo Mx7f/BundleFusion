@@ -1,14 +1,13 @@
 #pragma once
 
 #include <cuda_runtime.h>
-#include <cuda_d3d11_interop.h>
 
-#include "../cudaUtil.h"
+#include "cudaUtil.h"
 #include "SolverBundlingParameters.h"
 #include "SolverBundlingState.h"
 
-#include "../cuda_SimpleMatrixUtil.h"
-#include "../CUDATimer.h"
+#include "cuda_SimpleMatrixUtil.h"
+#include "CUDATimer.h"
 
 #include <conio.h>
 
