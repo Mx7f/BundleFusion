@@ -400,6 +400,9 @@
       <Filter>Sensors</Filter>
     </ClInclude>
     <ClInclude Include="Source\EntryJ.h" />
+    <ClInclude Include="Source\Solver\SolverBundlingEquationsLie.h">
+      <Filter>SolverBundling</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="DXUT">

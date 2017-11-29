@@ -21,6 +21,73 @@ extern "C" void VisualizeCorrespondences(const uint2& imageIndices, const Solver
 extern "C" float EvalResidual(SolverInput& input, SolverState& state, SolverParameters& parameters, CUDATimer* timer);
 #endif
 
+static void allocateSolverState(SolverState& state, unsigned int numberOfVariables, unsigned int maxNumResiduals, unsigned int maxNumDenseImPairs, unsigned int maxNumberOfImages) {
+    // State
+    MLIB_CUDA_SAFE_CALL(cudaMalloc(&state.d_deltaRot, sizeof(float3)*numberOfVariables));
+    MLIB_CUDA_SAFE_CALL(cudaMalloc(&state.d_deltaTrans, sizeof(float3)*numberOfVariables));
+    MLIB_CUDA_SAFE_CALL(cudaMalloc(&state.d_rRot, sizeof(float3)*numberOfVariables));
+    MLIB_CUDA_SAFE_CALL(cudaMalloc(&state.d_rTrans, sizeof(float3)*numberOfVariables));
+    MLIB_CUDA_SAFE_CALL(cudaMalloc(&state.d_zRot, sizeof(float3)*numberOfVariables));
+    MLIB_CUDA_SAFE_CALL(cudaMalloc(&state.d_zTrans, sizeof(float3)*numberOfVariables));
+    MLIB_CUDA_SAFE_CALL(cudaMalloc(&state.d_pRot, sizeof(float3)*numberOfVariables));
+    MLIB_CUDA_SAFE_CALL(cudaMalloc(&state.d_pTrans, sizeof(float3)*numberOfVariables));
+    MLIB_CUDA_SAFE_CALL(cudaMalloc(&state.d_Jp, sizeof(float3)*maxNumResiduals));
+    MLIB_CUDA_SAFE_CALL(cudaMalloc(&state.d_Ap_XRot, sizeof(float3)*numberOfVariables));
+    MLIB_CUDA_SAFE_CALL(cudaMalloc(&state.d_Ap_XTrans, sizeof(float3)*numberOfVariables));
+    MLIB_CUDA_SAFE_CALL(cudaMalloc(&state.d_scanAlpha, sizeof(float) * 2));
+    MLIB_CUDA_SAFE_CALL(cudaMalloc(&state.d_rDotzOld, sizeof(float) *numberOfVariables));
+    MLIB_CUDA_SAFE_CALL(cudaMalloc(&state.d_precondionerRot, sizeof(float3)*numberOfVariables));
+    MLIB_CUDA_SAFE_CALL(cudaMalloc(&state.d_precondionerTrans, sizeof(float3)*numberOfVariables));
+    MLIB_CUDA_SAFE_CALL(cudaMalloc(&state.d_sumResidual, sizeof(float)));
+    MLIB_CUDA_SAFE_CALL(cudaMalloc(&state.d_countHighResidual, sizeof(int)));
+    MLIB_CUDA_SAFE_CALL(cudaMalloc(&state.d_denseJtJ, sizeof(float) * 36 * numberOfVariables * numberOfVariables));
+    MLIB_CUDA_SAFE_CALL(cudaMalloc(&state.d_denseJtr, sizeof(float) * 6 * numberOfVariables));
+    MLIB_CUDA_SAFE_CALL(cudaMalloc(&state.d_denseCorrCounts, sizeof(float) * maxNumDenseImPairs));
+    MLIB_CUDA_SAFE_CALL(cudaMalloc(&state.d_denseOverlappingImages, sizeof(uint2) * maxNumDenseImPairs));
+    MLIB_CUDA_SAFE_CALL(cudaMalloc(&state.d_numDenseOverlappingImages, sizeof(int)));
+    MLIB_CUDA_SAFE_CALL(cudaMalloc(&state.d_corrCount, sizeof(int)));
+    MLIB_CUDA_SAFE_CALL(cudaMalloc(&state.d_corrCountColor, sizeof(int)));
+    MLIB_CUDA_SAFE_CALL(cudaMalloc(&state.d_sumResidualColor, sizeof(float)));
+
+#ifdef USE_LIE_SPACE
+    MLIB_CUDA_SAFE_CALL(cudaMalloc(&state.d_xTransforms, sizeof(float4x4)*maxNumberOfImages));
+    MLIB_CUDA_SAFE_CALL(cudaMalloc(&state.d_xTransformInverses, sizeof(float4x4)*maxNumberOfImages));
+#else
+    m_solverState.d_xTransforms = NULL;
+    m_solverState.d_xTransformInverses = NULL;
+#endif
+}
+
+static void initializeSolverState(SolverState& state, unsigned int numberOfVariables, unsigned int maxNumResiduals, unsigned int maxNumDenseImPairs) {
+    MLIB_CUDA_SAFE_CALL(cudaMemset(state.d_deltaRot, -1, sizeof(float3)*numberOfVariables));
+    MLIB_CUDA_SAFE_CALL(cudaMemset(state.d_deltaTrans, -1, sizeof(float3)*numberOfVariables));
+    MLIB_CUDA_SAFE_CALL(cudaMemset(state.d_rRot, -1, sizeof(float3)*numberOfVariables));
+    MLIB_CUDA_SAFE_CALL(cudaMemset(state.d_rTrans, -1, sizeof(float3)*numberOfVariables));
+    MLIB_CUDA_SAFE_CALL(cudaMemset(state.d_zRot, -1, sizeof(float3)*numberOfVariables));
+    MLIB_CUDA_SAFE_CALL(cudaMemset(state.d_zTrans, -1, sizeof(float3)*numberOfVariables));
+    MLIB_CUDA_SAFE_CALL(cudaMemset(state.d_pRot, -1, sizeof(float3)*numberOfVariables));
+    MLIB_CUDA_SAFE_CALL(cudaMemset(state.d_pTrans, -1, sizeof(float3)*numberOfVariables));
+    MLIB_CUDA_SAFE_CALL(cudaMemset(state.d_Jp, -1, sizeof(float3)*maxNumResiduals));
+    MLIB_CUDA_SAFE_CALL(cudaMemset(state.d_Ap_XRot, -1, sizeof(float3)*numberOfVariables));
+    MLIB_CUDA_SAFE_CALL(cudaMemset(state.d_Ap_XTrans, -1, sizeof(float3)*numberOfVariables));
+    MLIB_CUDA_SAFE_CALL(cudaMemset(state.d_scanAlpha, -1, sizeof(float) * 2));
+    MLIB_CUDA_SAFE_CALL(cudaMemset(state.d_rDotzOld, -1, sizeof(float) *numberOfVariables));
+    MLIB_CUDA_SAFE_CALL(cudaMemset(state.d_precondionerRot, -1, sizeof(float3)*numberOfVariables));
+    MLIB_CUDA_SAFE_CALL(cudaMemset(state.d_precondionerTrans, -1, sizeof(float3)*numberOfVariables));
+    MLIB_CUDA_SAFE_CALL(cudaMemset(state.d_sumResidual, -1, sizeof(float)));
+    MLIB_CUDA_SAFE_CALL(cudaMemset(state.d_countHighResidual, -1, sizeof(int)));
+    MLIB_CUDA_SAFE_CALL(cudaMemset(state.d_denseJtJ, -1, sizeof(float) * 36 * numberOfVariables * numberOfVariables));
+    MLIB_CUDA_SAFE_CALL(cudaMemset(state.d_denseJtr, -1, sizeof(float) * 6 * numberOfVariables));
+    MLIB_CUDA_SAFE_CALL(cudaMemset(state.d_denseCorrCounts, -1, sizeof(float) * maxNumDenseImPairs));
+    MLIB_CUDA_SAFE_CALL(cudaMemset(state.d_denseOverlappingImages, -1, sizeof(uint2) * maxNumDenseImPairs));
+    MLIB_CUDA_SAFE_CALL(cudaMemset(state.d_numDenseOverlappingImages, -1, sizeof(int)));
+
+    MLIB_CUDA_SAFE_CALL(cudaMemset(state.d_corrCount, -1, sizeof(int)));
+    MLIB_CUDA_SAFE_CALL(cudaMemset(state.d_corrCountColor, -1, sizeof(int)));
+    MLIB_CUDA_SAFE_CALL(cudaMemset(state.d_sumResidualColor, -1, sizeof(float)));
+}
+
+
 CUDASolverBundling::CUDASolverBundling(unsigned int maxNumberOfImages, unsigned int maxNumResiduals)
 	: m_maxNumberOfImages(maxNumberOfImages)
 	, THREADS_PER_BLOCK(512) // keep consistent with the GPU
@@ -37,53 +104,18 @@ CUDASolverBundling::CUDASolverBundling(unsigned int maxNumberOfImages, unsigned 
 
 	const unsigned int numberOfVariables = maxNumberOfImages;
 	m_maxCorrPerImage = math::clamp(maxNumResiduals / maxNumberOfImages, 1000u, 4000u);
+    m_maxNumDenseImPairs = m_maxNumberOfImages * (m_maxNumberOfImages - 1) / 2;
 
-	// State
-	MLIB_CUDA_SAFE_CALL(cudaMalloc(&m_solverState.d_deltaRot, sizeof(float3)*numberOfVariables));
-	MLIB_CUDA_SAFE_CALL(cudaMalloc(&m_solverState.d_deltaTrans, sizeof(float3)*numberOfVariables));
-	MLIB_CUDA_SAFE_CALL(cudaMalloc(&m_solverState.d_rRot, sizeof(float3)*numberOfVariables));
-	MLIB_CUDA_SAFE_CALL(cudaMalloc(&m_solverState.d_rTrans, sizeof(float3)*numberOfVariables));
-	MLIB_CUDA_SAFE_CALL(cudaMalloc(&m_solverState.d_zRot, sizeof(float3)*numberOfVariables));
-	MLIB_CUDA_SAFE_CALL(cudaMalloc(&m_solverState.d_zTrans, sizeof(float3)*numberOfVariables));
-	MLIB_CUDA_SAFE_CALL(cudaMalloc(&m_solverState.d_pRot, sizeof(float3)*numberOfVariables));
-	MLIB_CUDA_SAFE_CALL(cudaMalloc(&m_solverState.d_pTrans, sizeof(float3)*numberOfVariables));
-	MLIB_CUDA_SAFE_CALL(cudaMalloc(&m_solverState.d_Jp, sizeof(float3)*maxNumResiduals));
-	MLIB_CUDA_SAFE_CALL(cudaMalloc(&m_solverState.d_Ap_XRot, sizeof(float3)*numberOfVariables));
-	MLIB_CUDA_SAFE_CALL(cudaMalloc(&m_solverState.d_Ap_XTrans, sizeof(float3)*numberOfVariables));
-	MLIB_CUDA_SAFE_CALL(cudaMalloc(&m_solverState.d_scanAlpha, sizeof(float) * 2));
-	MLIB_CUDA_SAFE_CALL(cudaMalloc(&m_solverState.d_rDotzOld, sizeof(float) *numberOfVariables));
-	MLIB_CUDA_SAFE_CALL(cudaMalloc(&m_solverState.d_precondionerRot, sizeof(float3)*numberOfVariables));
-	MLIB_CUDA_SAFE_CALL(cudaMalloc(&m_solverState.d_precondionerTrans, sizeof(float3)*numberOfVariables));
-	MLIB_CUDA_SAFE_CALL(cudaMalloc(&m_solverState.d_sumResidual, sizeof(float)));
-	unsigned int n = (maxNumResiduals + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
-	MLIB_CUDA_SAFE_CALL(cudaMalloc(&m_solverExtra.d_maxResidual, sizeof(float) * n));
-	MLIB_CUDA_SAFE_CALL(cudaMalloc(&m_solverExtra.d_maxResidualIndex, sizeof(int) * n));
-	m_solverExtra.h_maxResidual = new float[n];
-	m_solverExtra.h_maxResidualIndex = new int[n];
 
-	MLIB_CUDA_SAFE_CALL(cudaMalloc(&d_variablesToCorrespondences, sizeof(int)*m_maxNumberOfImages*m_maxCorrPerImage));
-	MLIB_CUDA_SAFE_CALL(cudaMalloc(&d_numEntriesPerRow, sizeof(int)*m_maxNumberOfImages));
+    allocateSolverState(m_solverState, numberOfVariables, maxNumResiduals, m_maxNumDenseImPairs, m_maxNumberOfImages);
 
-	MLIB_CUDA_SAFE_CALL(cudaMalloc(&m_solverState.d_countHighResidual, sizeof(int)));
-
-	MLIB_CUDA_SAFE_CALL(cudaMalloc(&m_solverState.d_denseJtJ, sizeof(float) * 36 * numberOfVariables * numberOfVariables));
-	MLIB_CUDA_SAFE_CALL(cudaMalloc(&m_solverState.d_denseJtr, sizeof(float) * 6 * numberOfVariables));
-	m_maxNumDenseImPairs = m_maxNumberOfImages * (m_maxNumberOfImages - 1) / 2;
-	MLIB_CUDA_SAFE_CALL(cudaMalloc(&m_solverState.d_denseCorrCounts, sizeof(float) * m_maxNumDenseImPairs));
-	MLIB_CUDA_SAFE_CALL(cudaMalloc(&m_solverState.d_denseOverlappingImages, sizeof(uint2) * m_maxNumDenseImPairs));
-	MLIB_CUDA_SAFE_CALL(cudaMalloc(&m_solverState.d_numDenseOverlappingImages, sizeof(int)));
-
-	MLIB_CUDA_SAFE_CALL(cudaMalloc(&m_solverState.d_corrCount, sizeof(int)));
-	MLIB_CUDA_SAFE_CALL(cudaMalloc(&m_solverState.d_corrCountColor, sizeof(int)));
-	MLIB_CUDA_SAFE_CALL(cudaMalloc(&m_solverState.d_sumResidualColor, sizeof(float)));
-
-#ifdef USE_LIE_SPACE
-	MLIB_CUDA_SAFE_CALL(cudaMalloc(&m_solverState.d_xTransforms, sizeof(float4x4)*m_maxNumberOfImages));
-	MLIB_CUDA_SAFE_CALL(cudaMalloc(&m_solverState.d_xTransformInverses, sizeof(float4x4)*m_maxNumberOfImages));
-#else
-	m_solverState.d_xTransforms = NULL;
-	m_solverState.d_xTransformInverses = NULL;
-#endif
+    unsigned int n = (maxNumResiduals + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
+    MLIB_CUDA_SAFE_CALL(cudaMalloc(&m_solverExtra.d_maxResidual, sizeof(float) * n));
+    MLIB_CUDA_SAFE_CALL(cudaMalloc(&m_solverExtra.d_maxResidualIndex, sizeof(int) * n));
+    m_solverExtra.h_maxResidual = new float[n];
+    m_solverExtra.h_maxResidualIndex = new int[n];
+    MLIB_CUDA_SAFE_CALL(cudaMalloc(&d_variablesToCorrespondences, sizeof(int)*m_maxNumberOfImages*m_maxCorrPerImage));
+    MLIB_CUDA_SAFE_CALL(cudaMalloc(&d_numEntriesPerRow, sizeof(int)*m_maxNumberOfImages));
 
 #ifdef NEW_GUIDED_REMOVE
 	cudaMalloc(&d_transforms, sizeof(float4x4)*m_maxNumberOfImages);
@@ -100,36 +132,12 @@ CUDASolverBundling::CUDASolverBundling(unsigned int maxNumberOfImages, unsigned 
 	m_defaultParams.denseOverlapCheckSubsampleFactor = GlobalBundlingState::get().s_denseOverlapCheckSubsampleFactor;
 
 	//!!!DEBUGGING
-	MLIB_CUDA_SAFE_CALL(cudaMemset(m_solverState.d_deltaRot, -1, sizeof(float3)*numberOfVariables));
-	MLIB_CUDA_SAFE_CALL(cudaMemset(m_solverState.d_deltaTrans, -1, sizeof(float3)*numberOfVariables));
-	MLIB_CUDA_SAFE_CALL(cudaMemset(m_solverState.d_rRot, -1, sizeof(float3)*numberOfVariables));
-	MLIB_CUDA_SAFE_CALL(cudaMemset(m_solverState.d_rTrans, -1, sizeof(float3)*numberOfVariables));
-	MLIB_CUDA_SAFE_CALL(cudaMemset(m_solverState.d_zRot, -1, sizeof(float3)*numberOfVariables));
-	MLIB_CUDA_SAFE_CALL(cudaMemset(m_solverState.d_zTrans, -1, sizeof(float3)*numberOfVariables));
-	MLIB_CUDA_SAFE_CALL(cudaMemset(m_solverState.d_pRot, -1, sizeof(float3)*numberOfVariables));
-	MLIB_CUDA_SAFE_CALL(cudaMemset(m_solverState.d_pTrans, -1, sizeof(float3)*numberOfVariables));
-	MLIB_CUDA_SAFE_CALL(cudaMemset(m_solverState.d_Jp, -1, sizeof(float3)*maxNumResiduals));
-	MLIB_CUDA_SAFE_CALL(cudaMemset(m_solverState.d_Ap_XRot, -1, sizeof(float3)*numberOfVariables));
-	MLIB_CUDA_SAFE_CALL(cudaMemset(m_solverState.d_Ap_XTrans, -1, sizeof(float3)*numberOfVariables));
-	MLIB_CUDA_SAFE_CALL(cudaMemset(m_solverState.d_scanAlpha, -1, sizeof(float) * 2));
-	MLIB_CUDA_SAFE_CALL(cudaMemset(m_solverState.d_rDotzOld, -1, sizeof(float) *numberOfVariables));
-	MLIB_CUDA_SAFE_CALL(cudaMemset(m_solverState.d_precondionerRot, -1, sizeof(float3)*numberOfVariables));
-	MLIB_CUDA_SAFE_CALL(cudaMemset(m_solverState.d_precondionerTrans, -1, sizeof(float3)*numberOfVariables));
-	MLIB_CUDA_SAFE_CALL(cudaMemset(m_solverState.d_sumResidual, -1, sizeof(float)));
-	MLIB_CUDA_SAFE_CALL(cudaMemset(m_solverExtra.d_maxResidual, -1, sizeof(float) * n));
-	MLIB_CUDA_SAFE_CALL(cudaMemset(m_solverExtra.d_maxResidualIndex, -1, sizeof(int) * n));
-	MLIB_CUDA_SAFE_CALL(cudaMemset(d_variablesToCorrespondences, -1, sizeof(int)*m_maxNumberOfImages*m_maxCorrPerImage));
-	MLIB_CUDA_SAFE_CALL(cudaMemset(d_numEntriesPerRow, -1, sizeof(int)*m_maxNumberOfImages));
-	MLIB_CUDA_SAFE_CALL(cudaMemset(m_solverState.d_countHighResidual, -1, sizeof(int)));
-	MLIB_CUDA_SAFE_CALL(cudaMemset(m_solverState.d_denseJtJ, -1, sizeof(float) * 36 * numberOfVariables * numberOfVariables));
-	MLIB_CUDA_SAFE_CALL(cudaMemset(m_solverState.d_denseJtr, -1, sizeof(float) * 6 * numberOfVariables));
-	MLIB_CUDA_SAFE_CALL(cudaMemset(m_solverState.d_denseCorrCounts, -1, sizeof(float) * m_maxNumDenseImPairs));
-	MLIB_CUDA_SAFE_CALL(cudaMemset(m_solverState.d_denseOverlappingImages, -1, sizeof(uint2) * m_maxNumDenseImPairs));
-	MLIB_CUDA_SAFE_CALL(cudaMemset(m_solverState.d_numDenseOverlappingImages, -1, sizeof(int)));
+    MLIB_CUDA_SAFE_CALL(cudaMemset(m_solverExtra.d_maxResidual, -1, sizeof(float) * n));
+    MLIB_CUDA_SAFE_CALL(cudaMemset(m_solverExtra.d_maxResidualIndex, -1, sizeof(int) * n));
+    MLIB_CUDA_SAFE_CALL(cudaMemset(d_variablesToCorrespondences, -1, sizeof(int)*m_maxNumberOfImages*m_maxCorrPerImage));
+    MLIB_CUDA_SAFE_CALL(cudaMemset(d_numEntriesPerRow, -1, sizeof(int)*m_maxNumberOfImages));
 
-	MLIB_CUDA_SAFE_CALL(cudaMemset(m_solverState.d_corrCount, -1, sizeof(int)));
-	MLIB_CUDA_SAFE_CALL(cudaMemset(m_solverState.d_corrCountColor, -1, sizeof(int)));
-	MLIB_CUDA_SAFE_CALL(cudaMemset(m_solverState.d_sumResidualColor, -1, sizeof(float)));
+    initializeSolverState(m_solverState, numberOfVariables, maxNumResiduals, m_maxNumDenseImPairs);
 
 	cutilSafeCall(cudaDeviceSynchronize());
 	cutilCheckMsg(__FUNCTION__);

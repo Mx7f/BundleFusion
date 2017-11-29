@@ -225,6 +225,7 @@
     <ClInclude Include="Source\Solver\LieDerivUtil.h" />
     <ClInclude Include="Source\Solver\SolverBundlingDenseUtil.h" />
     <ClInclude Include="Source\Solver\SolverBundlingEquations.h" />
+    <ClInclude Include="Source\Solver\SolverBundlingEquationsLie.h" />
     <ClInclude Include="Source\Solver\SolverBundlingParameters.h" />
     <ClInclude Include="Source\Solver\SolverBundlingState.h" />
     <ClInclude Include="Source\Solver\SolverBundlingUtil.h" />
