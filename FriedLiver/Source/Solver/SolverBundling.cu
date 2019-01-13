@@ -1140,9 +1140,24 @@ extern "C" void solveBundlingStub(SolverInput& input, SolverState& state, Solver
 {
     static int counter = 0;
     ++counter;
-    printf("%u: %p\n", input.numberOfImages, input.d_cacheFrames);
-    if (counter == 13 || dumpInputOutput) {
-        std::string prefix = "bundle_adjustment_dump";
+    unsigned int ims = input.numberOfImages;
+    unsigned int cors = input.numberOfCorrespondences;
+    printf("%u(%u): %p\n", ims, cors, input.d_cacheFrames);
+
+    static unsigned int corThresh = 500;
+    if (cors > corThresh || dumpInputOutput) {
+        corThresh += 500;
+        char buffer[200];
+        sprintf(buffer, "bundle_adjustment_sparse%d_%u_%u", counter, ims, cors);
+        std::string prefix = buffer;
+        printf("Saving %s\n", buffer);
+        saveAllStateToFile(prefix + "_input.bin", input, state, parameters);
+        loadAllStateFromFile(prefix + "_input.bin", input, state, parameters);
+    } else if (input.d_cacheFrames) {
+        char buffer[200];
+        sprintf(buffer, "bundle_adjustment_dense%d_%u_%u", counter, ims, cors);
+        std::string prefix = buffer;
+        printf("Saving %s\n", buffer);
         saveAllStateToFile(prefix + "_input.bin", input, state, parameters);
         loadAllStateFromFile(prefix + "_input.bin", input, state, parameters);
     }

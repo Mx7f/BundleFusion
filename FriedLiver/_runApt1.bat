@@ -1,1 +1,1 @@
-x64\Release\FriedLiver zParametersApt1.txt zParametersBundlingDefault.txt
+x64\Release\FriedLiver zParametersApt1.txt zParametersBundlingLessMem.txt
