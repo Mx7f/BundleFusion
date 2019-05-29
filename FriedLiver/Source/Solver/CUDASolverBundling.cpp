@@ -21,6 +21,8 @@ extern "C" void VisualizeCorrespondences(const uint2& imageIndices, const Solver
 extern "C" float EvalResidual(SolverInput& input, SolverState& state, SolverParameters& parameters, CUDATimer* timer);
 #endif
 
+#define STUB_OUT_DENSE 1
+
 static void allocateSolverState(SolverState& state, unsigned int numberOfVariables, unsigned int maxNumResiduals, unsigned int maxNumDenseImPairs, unsigned int maxNumberOfImages) {
     // State
     MLIB_CUDA_SAFE_CALL(cudaMalloc(&state.d_deltaRot, sizeof(float3)*numberOfVariables));
@@ -40,11 +42,13 @@ static void allocateSolverState(SolverState& state, unsigned int numberOfVariabl
     MLIB_CUDA_SAFE_CALL(cudaMalloc(&state.d_precondionerTrans, sizeof(float3)*numberOfVariables));
     MLIB_CUDA_SAFE_CALL(cudaMalloc(&state.d_sumResidual, sizeof(float)));
     MLIB_CUDA_SAFE_CALL(cudaMalloc(&state.d_countHighResidual, sizeof(int)));
+#if STUB_OUT_DENSE == 0
     MLIB_CUDA_SAFE_CALL(cudaMalloc(&state.d_denseJtJ, sizeof(float) * 36 * numberOfVariables * numberOfVariables));
     MLIB_CUDA_SAFE_CALL(cudaMalloc(&state.d_denseJtr, sizeof(float) * 6 * numberOfVariables));
     MLIB_CUDA_SAFE_CALL(cudaMalloc(&state.d_denseCorrCounts, sizeof(float) * maxNumDenseImPairs));
     MLIB_CUDA_SAFE_CALL(cudaMalloc(&state.d_denseOverlappingImages, sizeof(uint2) * maxNumDenseImPairs));
     MLIB_CUDA_SAFE_CALL(cudaMalloc(&state.d_numDenseOverlappingImages, sizeof(int)));
+#endif
     MLIB_CUDA_SAFE_CALL(cudaMalloc(&state.d_corrCount, sizeof(int)));
     MLIB_CUDA_SAFE_CALL(cudaMalloc(&state.d_corrCountColor, sizeof(int)));
     MLIB_CUDA_SAFE_CALL(cudaMalloc(&state.d_sumResidualColor, sizeof(float)));
@@ -76,11 +80,13 @@ static void initializeSolverState(SolverState& state, unsigned int numberOfVaria
     MLIB_CUDA_SAFE_CALL(cudaMemset(state.d_precondionerTrans, -1, sizeof(float3)*numberOfVariables));
     MLIB_CUDA_SAFE_CALL(cudaMemset(state.d_sumResidual, -1, sizeof(float)));
     MLIB_CUDA_SAFE_CALL(cudaMemset(state.d_countHighResidual, -1, sizeof(int)));
+#if STUB_OUT_DENSE == 0
     MLIB_CUDA_SAFE_CALL(cudaMemset(state.d_denseJtJ, -1, sizeof(float) * 36 * numberOfVariables * numberOfVariables));
     MLIB_CUDA_SAFE_CALL(cudaMemset(state.d_denseJtr, -1, sizeof(float) * 6 * numberOfVariables));
     MLIB_CUDA_SAFE_CALL(cudaMemset(state.d_denseCorrCounts, -1, sizeof(float) * maxNumDenseImPairs));
     MLIB_CUDA_SAFE_CALL(cudaMemset(state.d_denseOverlappingImages, -1, sizeof(uint2) * maxNumDenseImPairs));
     MLIB_CUDA_SAFE_CALL(cudaMemset(state.d_numDenseOverlappingImages, -1, sizeof(int)));
+#endif
 
     MLIB_CUDA_SAFE_CALL(cudaMemset(state.d_corrCount, -1, sizeof(int)));
     MLIB_CUDA_SAFE_CALL(cudaMemset(state.d_corrCountColor, -1, sizeof(int)));
@@ -104,6 +110,7 @@ CUDASolverBundling::CUDASolverBundling(unsigned int maxNumberOfImages, unsigned 
 
 	const unsigned int numberOfVariables = maxNumberOfImages;
 	m_maxCorrPerImage = math::clamp(maxNumResiduals / maxNumberOfImages, 1000u, 4000u);
+    maxNumResiduals = std::min(maxNumResiduals, m_maxCorrPerImage*m_maxNumberOfImages);
     m_maxNumDenseImPairs = m_maxNumberOfImages * (m_maxNumberOfImages - 1) / 2;
 
 
@@ -226,6 +233,12 @@ void CUDASolverBundling::solve(EntryJ* d_correspondences, unsigned int numberOfC
 	parameters.weightDenseColor = weightsDenseColor.front();
 	parameters.useDense = (parameters.weightDenseDepth > 0 || parameters.weightDenseColor > 0);
 	parameters.useDenseDepthAllPairwise = usePairwiseDense;
+#if STUB_OUT_DENSE == 1
+    parameters.weightDenseDepth = 0.0f;
+    parameters.weightDenseColor = 0.0f;
+    parameters.useDense = false;
+    parameters.useDenseDepthAllPairwise = false;
+#endif
 
 	SolverInput solverInput;
 	solverInput.d_correspondences = d_correspondences;

@@ -299,7 +299,10 @@ void SIFTImageManager::alloc()
 	MLIB_CUDA_SAFE_CALL(cudaMalloc(&d_validImages, sizeof(int) *  m_maxNumImages));
 	MLIB_CUDA_SAFE_CALL(cudaMemcpy(d_validImages, m_validImages.data(), sizeof(int), cudaMemcpyHostToDevice)); // first is valid
 
-	const unsigned int maxResiduals = MAX_MATCHES_PER_IMAGE_PAIR_FILTERED * (m_maxNumImages*(m_maxNumImages - 1)) / 2;
+    unsigned int maxResiduals = MAX_MATCHES_PER_IMAGE_PAIR_FILTERED * (m_maxNumImages*(m_maxNumImages - 1)) / 2;
+
+    maxResiduals = std::min((unsigned int)1e5, maxResiduals);//TODO:Remove
+
 	m_globNumResiduals = 0;
 	MLIB_CUDA_SAFE_CALL(cudaMalloc(&d_globNumResiduals, sizeof(int)));
 	MLIB_CUDA_SAFE_CALL(cudaMemset(d_globNumResiduals, 0, sizeof(int)));

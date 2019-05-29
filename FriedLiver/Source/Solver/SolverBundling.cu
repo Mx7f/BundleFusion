@@ -1153,14 +1153,7 @@ extern "C" void solveBundlingStub(SolverInput& input, SolverState& state, Solver
         printf("Saving %s\n", buffer);
         saveAllStateToFile(prefix + "_input.bin", input, state, parameters);
         loadAllStateFromFile(prefix + "_input.bin", input, state, parameters);
-    } else if (input.d_cacheFrames) {
-        char buffer[200];
-        sprintf(buffer, "bundle_adjustment_dense%d_%u_%u", counter, ims, cors);
-        std::string prefix = buffer;
-        printf("Saving %s\n", buffer);
-        saveAllStateToFile(prefix + "_input.bin", input, state, parameters);
-        loadAllStateFromFile(prefix + "_input.bin", input, state, parameters);
-    }
+    } 
 
 	if (convergenceAnalysis) {
 		float initialResidual = EvalResidual(input, state, parameters, timer);
